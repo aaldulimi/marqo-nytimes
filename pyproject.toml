@@ -6,6 +6,10 @@ authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+marqo = "^0.1.15"
+aiohttp = "^3.8.3"
+aiodns = "^3.0.0"
+selectolax = "^0.3.11"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
