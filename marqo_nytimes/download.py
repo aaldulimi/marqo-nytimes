@@ -1,6 +1,7 @@
 import requests
 from selectolax.parser import HTMLParser
-import random
+import aiohttp
+import asyncio
 import xml.etree.ElementTree as ET
 
 URL = "https://www.nytimes.com/sitemap/thisweek/"
@@ -25,41 +26,45 @@ def get_article_url(url):
     return all_articles
 
 
-def get_article_data(url):
-    response = requests.get(url, headers=header)
-    response_text = response.text
+async def get_article_data(session, url):
+    async with session.get(url, headers=header) as resp:
+        response_text = await resp.text()
 
     
-    if response_text:       
-        article = HTMLParser(response_text)
+        if response_text:       
+            article = HTMLParser(response_text)
 
-        title = article.css_first('h1')
-        if title == None: return 
-        title = title.text()
+            title = article.css_first('h1')
+            if title == None: return 
+            title = title.text()
 
-        author = article.css_first('span.last-byline')
-        if author == None: author = 'unkown' 
-        else: author = author.child.text()
+            author = article.css_first('span.last-byline')
+            if author == None: author = 'unkown' 
+            else: author = author.child.text()
 
-        body = ''
-        for node in article.css('div.StoryBodyCompanionColumn'):
-            paragraph = node.child.select('p').matches
-            for p in paragraph:
-                if p: body += p.text()
+            body = ''
+            for node in article.css('div.StoryBodyCompanionColumn'):
+                paragraph = node.child.select('p').matches
+                for p in paragraph:
+                    if p: body += p.text()
 
 
-        print("TITLE: " + title)
+            print("TITLE: " + title)
+            
+        return 
+
+
+async def download_articles(article_urls):
+    async with aiohttp.ClientSession(headers=header) as session:
+        tasks = []
+        for url in article_urls[:10]: 
+            tasks.append(asyncio.ensure_future(get_article_data(session, url)))
         
-
-    
-    return 
+        collection = await asyncio.gather(*tasks)
 
 
 
 if __name__ == "__main__":
     article_urls = get_article_url(URL)
 
-    for url in article_urls:
-        print(url)
-        get_article_data(url)
-        break
+    asyncio.run(download_articles(article_urls))
