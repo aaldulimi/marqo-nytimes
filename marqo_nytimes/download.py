@@ -84,7 +84,7 @@ async def get_article_data(session, url):
 async def download_articles(article_urls):
     async with aiohttp.ClientSession(headers=HEADER) as session:
         tasks = []
-        for url in article_urls[:300]: 
+        for url in article_urls[:200]: 
             tasks.append(asyncio.ensure_future(get_article_data(session, url)))
         
         collection = await asyncio.gather(*tasks)
