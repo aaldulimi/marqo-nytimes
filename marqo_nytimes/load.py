@@ -12,6 +12,6 @@ def load(file_location):
             body = doc.findtext('./body')
             url = doc.findtext('./url')
             
-            yield Document(id=article_count, title=title, author=author, body=body, url=url)
+            yield Document(_id=str(article_count), title=title, author=author, body=body, url=url)
             
             doc.clear()
