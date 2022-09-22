@@ -2,18 +2,19 @@ import requests
 from selectolax.parser import HTMLParser
 import aiohttp
 import asyncio
+import xml.dom.minidom
 import xml.etree.ElementTree as ET
 
 URL = "https://www.nytimes.com/sitemap/thisweek/"
 
-header = {
+HEADER = {
     'user-agent': "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Mobile Safari/537.36"  
 }
 
 def get_article_url(url):
     all_articles = []
 
-    response = requests.get(url, headers=header)
+    response = requests.get(url, headers=HEADER)
     data = response.text
 
     for node in HTMLParser(data).css('div > ul:nth-child(4) > li'):
@@ -27,7 +28,7 @@ def get_article_url(url):
 
 
 async def get_article_data(session, url):
-    async with session.get(url, headers=header) as resp:
+    async with session.get(url, headers=HEADER) as resp:
         response_text = await resp.text()
 
     
@@ -49,13 +50,37 @@ async def get_article_data(session, url):
                     if p: body += p.text()
 
 
-            print("TITLE: " + title)
+            doc = ET.Element("doc")
+            ET.SubElement(doc, "title").text = title
+            ET.SubElement(doc, "author").text = author
+            ET.SubElement(doc, "body").text = body
+            ET.SubElement(doc, "url").text = url
+
+            dom = xml.dom.minidom.parseString(ET.tostring(doc))
+            doc = dom.childNodes[0].toprettyxml()
+
+            global to_load, article_count
+
+            article_count += 1
+            to_load.append(doc)
+            
+            # write docs to file, 10 at time 
+            if len(to_load) >= 10:
+                with open("data/data.xml", 'a') as file:
+                    for doc in to_load:
+                        file.write(doc)
+
+                    file.close()
+
+                to_load = []
+
+            
             
         return 
 
 
 async def download_articles(article_urls):
-    async with aiohttp.ClientSession(headers=header) as session:
+    async with aiohttp.ClientSession(headers=HEADER) as session:
         tasks = []
         for url in article_urls[:10]: 
             tasks.append(asyncio.ensure_future(get_article_data(session, url)))
@@ -65,6 +90,8 @@ async def download_articles(article_urls):
 
 
 if __name__ == "__main__":
-    article_urls = get_article_url(URL)
+    to_load = []
+    article_count = 0
 
+    article_urls = get_article_url(URL)
     asyncio.run(download_articles(article_urls))
