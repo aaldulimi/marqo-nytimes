@@ -13,4 +13,4 @@ if __name__ == "__main__":
         nytimes_index.add_documents([asdict(doc)])
 
     results = nytimes_index.search('Did Putin say something?', searchable_attributes=['body'])
-    pprint(results)
+    pprint.pprint(results["hits"][0])
