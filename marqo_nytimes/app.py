@@ -23,7 +23,7 @@ def build_index(name, filename, max_count):
 
 
 if __name__ == "__main__":
-    st.title("NYTimes Tensor search using Marqo!")
+    st.title("NYTimes Tensor Search using Marqo!")
     st.write("Tensor search on articles published by NYTimes within the last week.")
 
     col1, col2 = st.columns(2)
@@ -31,9 +31,11 @@ if __name__ == "__main__":
     search_field = col1.selectbox("Choose field to search", ["title", "body", "author"])
     results_count = col2.slider("Number of results to show", 1, 10, 5)
 
-    index = build_index("nytimes-index", "data/data.xml", 100)
+    index_indicator = st.text("Hold on! The index needs to be built. This might take some time...")
+    index = build_index("nytimes-index", "data/data.xml", 20)
+    index_indicator.empty()
 
-    search_query = st.text_input("Search", placeholder="Did Putin say something?")
+    search_query = st.text_input("Search", placeholder="What happened to inflation?")
     
     if search_query:
         results = index.search(search_query, searchable_attributes=[search_field])
