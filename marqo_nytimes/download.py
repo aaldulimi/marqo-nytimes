@@ -75,14 +75,16 @@ async def get_article_data(session, url):
                 to_load = []
 
             
+            print("Articles scraped so far: ", str(article_count))
             
         return 
+
 
 
 async def download_articles(article_urls):
     async with aiohttp.ClientSession(headers=HEADER) as session:
         tasks = []
-        for url in article_urls[:10]: 
+        for url in article_urls[:300]: 
             tasks.append(asyncio.ensure_future(get_article_data(session, url)))
         
         collection = await asyncio.gather(*tasks)
@@ -94,4 +96,15 @@ if __name__ == "__main__":
     article_count = 0
 
     article_urls = get_article_url(URL)
+
+    with open("data/data.xml", 'w') as file:
+        file.write('<documents>\n')
+        file.close()
+
+
     asyncio.run(download_articles(article_urls))
+
+
+    with open("data/data.xml", 'a') as file:
+        file.write('</documents>')
+        file.close()
